@@ -1,0 +1,134 @@
+---
+title: "Week_3_lab"
+author: "Pavan Nayak"
+date: "1/21/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(reticulate)
+use_python("C:/Users/Pavan Nayak/Anaconda3/python.exe")
+```
+
+```{python, include=FALSE}
+import os
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'C:/Users/Pavan Nayak/Anaconda3/Library/plugins/platforms'
+import pandas
+import sqlite3
+```
+
+```{r}
+data(mtcars)
+help(mtcars)
+
+head(mtcars)
+
+```
+
+```{r}
+aggregate(mpg ~ cyl, data=mtcars, mean)
+```
+```{r}
+aggregate(mpg ~ cyl + gear, data=mtcars, mean)
+```
+
+
+```{r}
+library(dplyr)
+results = mtcars %>%
+    group_by(cyl) %>%
+    summarise(mean_mpg = mean(mpg))
+results
+```
+
+
+```{r}
+results = mtcars %>%
+    group_by(cyl, gear) %>%
+    summarise(mean_mpg = mean(mpg))
+```
+```{r}
+as.data.frame(results)
+```
+
+
+```{r}
+library(dbplyr)
+if (file.exists("mtcars.sqlite3"))
+{
+   file.remove("mtcars.sqlite3")
+}
+con <- DBI::dbConnect(RSQLite::SQLite(), "mtcars.sqlite3")
+DBI::dbWriteTable(con, "mtcars", mtcars)
+DBI::dbDisconnect(con)
+
+```
+
+```{r}
+setwd("~/UCI/Winter 2021 Q11/ECO_EVO_283/week3")
+list.files(pattern="*.sqlite3")
+```
+
+
+```{r}
+con <- DBI::dbConnect(RSQLite::SQLite(), "mtcars.sqlite3")
+mtcars2 <- tbl(con, "mtcars")
+g = mtcars2 %>% 
+    group_by(cyl) %>%
+    summarise(mean_mpg=mean(mpg))
+```
+
+```{r}
+g %>% show_query()
+```
+
+```{r}
+result = g %>% collect()
+as.data.frame(result)
+```
+
+
+```{python}
+mtcars = r.mtcars
+mtcars.head
+```
+
+```{python}
+mtcars.groupby(['cyl'])['mpg'].mean()
+```
+
+```{python}
+mtcars.groupby(['cyl', 'gear'])['mpg'].mean()
+```
+
+
+```{python}
+
+con = sqlite3.connect("mtcars_from_pandas.sqlite3")
+mtcars.to_sql("mtcars", con)
+con.close()
+```
+
+```{r}
+setwd("~/UCI/Winter 2021 Q11/ECO_EVO_283/week3")
+list.files(pattern="*.sqlite3")
+```
+
+```{python}
+import pandas as pd
+
+con = sqlite3.connect("mtcars_from_pandas.sqlite3")
+df = pd.read_sql("select * from mtcars", con)
+df.head()
+```
+
+```{python}
+df = pd.read_sql("select cyl, avg(mpg) from mtcars group by cyl", con)
+df.head()
+```
+
+```{python}
+df = pd.read_sql("select cyl, gear, avg(mpg) from mtcars group by cyl, gear", con)
+df.head()
+```
